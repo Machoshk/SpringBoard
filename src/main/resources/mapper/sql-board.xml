@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mybatis에서 매핑된 sql 이라는 것을 알려주기 위한 문장 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace : mybatis에 의해서 현재 xml 파일과 1:1로 연결된 Mapper 파일을 지정 -->
+<!-- 해당 xml 파일과 mapper 파일이 연동됨 -->
+<!-- mapper interface 파일의 구현체가 된 xml 임 -->
+<mapper namespace="com.bitc.board.mapper.BoardMapper">
+	<!-- id : mapper 파일의 메서드명, override 효과 -->
+	<!-- resultType : 해당 SQL문 실행 후 반환할 결과값의 타입 -->
+	<!-- parameterType : 해당 SQL문이 실행 시 필요한 데이터의 타입 -->
+	<select id="selectBoardList" resultType="com.bitc.board.dto.BoardDto">
+		<![CDATA[ 
+			SELECT
+				idx, title, creator_id, hit_cnt,
+				DATE_FORMAT(created_date, '%Y.%m.%d %H:%i:%s') AS created_date
+			FROM
+				t_board
+			WHERE
+				deleted_yn = 'N'
+			ORDER BY
+				idx DESC
+		]]>
+	</select>
+	
+	<!-- mybatis는 기본적으로 PreparedStatement 를 사용하여 SQL쿼리를 실행함 -->
+	<!-- mybatis에선 변수 입력 부분을 #{..} 으로 표기함 -->
+	<!-- #{..} 에 들어갈 변수는 Dto 클래스의 멤버 변수를 사용함 -->
+	<!--useGeneratedKeys : DBMS가 자동 키 생성 옵션을 지원할 경우 사용-->
+	<!--keyProperty : 지정한 컬럼명으로 자동 생성된 키 값을 저장한 키에 저장-->
+	<!--위의 2가지 옵션을 사용하여 DB에 데이터 저장 시 새로 생성된 키를 반환받아 매개변수로 받아온 BoardDto에 되돌려줌-->
+	<insert id="insertBoard" parameterType="com.bitc.board.dto.BoardDto" useGeneratedKeys="true" keyProperty="idx">
+		<![CDATA[
+			INSERT INTO
+				t_board (title, contents, creator_id, created_date)
+			VALUES
+				(#{title}, #{contents}, #{creatorId}, NOW())
+		]]>
+	</insert>
+	
+	<select id="selectBoardDetail" parameterType="int" resultType="com.bitc.board.dto.BoardDto">
+		<![CDATA[
+			SELECT
+				idx, title, contents, creator_id, created_date, update_id, updated_date, hit_cnt
+			FROM
+				t_board
+			WHERE
+				idx = #{idx}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</select>
+	
+	<update id="deleteBoard" parameterType="int">
+		<![CDATA[
+			UPDATE
+				t_board
+			SET
+				deleted_yn = 'Y'
+			WHERE
+				idx = #{idx}
+		]]>
+	</update>
+	
+	<!--<delete id="deleteBoard" parameterType="int">
+		<![CDATA[
+			DELETE FROM
+				t_board
+			WHERE
+				idx = #{idx}
+		]]>
+	</delete>-->
+	
+	<update id="updateBoard" parameterType="com.bitc.board.dto.BoardDto">
+		<![CDATA[
+			UPDATE
+				t_board
+			SET
+				title = #{title}, contents = #{contents}, update_id = #{creatorId}, updated_date = NOW()
+			WHERE
+				idx = #{idx}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</update>
+	
+	<update id="updateHitCnt" parameterType="int">
+		<![CDATA[
+			UPDATE
+				t_board
+			SET
+				hit_cnt = hit_cnt + 1
+			WHERE
+				idx = #{idx}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</update>
+	
+	<!-- 연동된 mapper 파일에서 매개변수의 타입을 List<BoardFileDto> 형태이기 때문에 parameterType은 BoardFileDto를 사용할 수 있음 -->
+	<!-- mybatis에서 지원하는 반복문인 <foreach>를 사용하여 지정한 내용을 -->
+	<!--Collection : 반복 가능한 객체를 입력. Map, List, Array, Set-->
+	<!--Item : collection에서 하나의 객체를 가져와서 저장할 변수-->
+	<!--sparator : 구분자, 반복되는 문자열을 구분하기 위한 기호 -->
+	<insert id="insertBoardFileList" parameterType="com.bitc.board.dto.BoardFileDto">
+		<![CDATA[ 
+			INSERT INTO t_file 
+			(board_idx, original_file_name, stored_file_path, file_size, creator_id, created_date)
+			VALUES 
+		]]>
+		<foreach collection="list" item="item" separator=",">
+			(#{item.boardIdx}, 
+			#{item.originalFileName}, 
+			#{item.storedFilePath}, 
+			#{item.fileSize}, 
+			'tester01', 
+			NOW())
+		</foreach>
+	</insert>
+	
+	<!-- 지정한 글번호에 첨부된 파일 목록 불러오기-->
+	<select id="selectBoardFileList" parameterType="int" resultType="com.bitc.board.dto.BoardFileDto">
+		<![CDATA[ 
+			SELECT 
+				file_idx, board_idx, original_file_name, stored_file_path, format(round(file_size / 1024), 0) AS file_size
+			FROM 
+				t_file
+			WHERE 
+				board_idx = #{idx}
+			AND 
+				deleted_yn = 'N'
+		]]>
+	</select>
+	
+	<!-- map : 매개변수가 1개일 경우 해당 매개변수의 타입을 사용하면 되고, 여러개일 경우 DTO 클래스 타입을 생성하여 매개변수의 타입을 지정하면되나, 매개변수의 타입 지정을 위해 DTO 클래스를 생성하기에는 애매할 경우 사용하는 것이 map 타입임 -->
+	<select id="selectBoardFileInfo" parameterType="map" resultType="com.bitc.board.dto.BoardFileDto">
+	<![CDATA[ 
+		SELECT
+			original_file_name, stored_file_path, file_size
+		FROM
+			t_file
+		WHERE
+			file_idx = #{fileIdx}
+		AND
+			board_idx = #{boardIdx}
+		AND
+			deleted_yn = 'N'
+	]]>
+	</select>
+</mapper>
+
+
+

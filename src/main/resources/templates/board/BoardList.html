@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="layout/head :: head">
+<title>스프링부트를 이용한 게시판</title>
+</head>
+
+<body>
+	<header th:include="layout/header :: header">
+	</header>
+	
+	<main class="container my-5">
+		<div class="row">
+			<div class="col-sm mx-auto">
+				<table class="table table-hover table-striped">
+					<thead>
+						<tr>
+							<th>글번호</th>
+							<th>제목</th>
+							<th>글쓴이</th>
+							<th>등록시간</th>
+							<th>조회수</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:if="${#lists.size(boardList)} > 0" th:each="item : ${boardList}">
+							<td th:text="${item.idx}"></td>
+							<td>
+								<a href="/board/openBoardDetail.do?idx=" th:attrappend="href=${item.idx}" th:text="${item.title}" class="text-decoration-none"></a>
+							</td>
+							<td th:text="${item.creatorId}"></td>
+							<td th:text="${item.createdDate}"></td>
+							<td th:text="${item.hitCnt}"></td>
+						</tr>
+						<tr th:unless="${#lists.size(boardList)} > 0">
+							<td colspan="5">조회된 결과가 없습니다.</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="d-flex justify-content-end">
+					<a href="/board/writeBoard.do" class="btn btn-primary">글쓰기</a>
+				</div>
+			</div>
+		</div>
+	</main>
+	
+	<footer th:replace="layout/footer :: footer">
+	</footer>
+</body>
+</html>

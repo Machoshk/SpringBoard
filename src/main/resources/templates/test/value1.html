@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>타임리프에서 변수 사용하기</title>
+</head>
+<body>
+	<div id="div01">
+		<h3>${} 형태로 변수 표현하기</h3>
+		
+		<div>
+			<p th:text="${member.userID}">asdf</p>
+			<p th:text="${member.userPw}">1234</p>
+			<p th:text="${member.userName}">kim</p>
+			<p th:text="${member.userEmail}">km</p>
+		</div>
+	</div>
+</body>
+</html>
